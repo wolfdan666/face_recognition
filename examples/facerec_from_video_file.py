@@ -42,6 +42,7 @@ while True:
     if not ret:
         break
 
+    # The first : returns all rows, second : returns all columns, ::-1 returns the frame channels in a reversed way.
     # Convert the image from BGR color (which OpenCV uses) to RGB color (which face_recognition uses)
     rgb_frame = frame[:, :, ::-1]
 
