@@ -2,7 +2,7 @@
 import cv2
 import face_recognition
 
-video = cv2.VideoCapture("Binden_to_Trump_Grow_up,Donald.mp4")
+video = cv2.VideoCapture("short_biden.mp4")
 fps = video.get(cv2.CAP_PROP_FPS)
 frameCount = video.get(cv2.CAP_PROP_FRAME_COUNT)
 size = (int(video.get(cv2.CAP_PROP_FRAME_WIDTH)), int(video.get(cv2.CAP_PROP_FRAME_HEIGHT)))
@@ -46,6 +46,31 @@ if success:
         # obama_face_encoding
     ]
 
+# 为了输出片段时间起止的变量们
+time_zones = []
+pre_time_i = -1
+cur_time_i = 0
+left_time = ()
+right_time = ()
+
+def get_ms():
+    milliseconds = video.get(cv2.CAP_PROP_POS_MSEC)
+
+    seconds = milliseconds//1000
+    milliseconds = milliseconds%1000
+    minutes = 0
+    hours = 0
+    if seconds >= 60:
+        minutes = seconds//60
+        seconds = seconds % 60
+
+    if minutes >= 60:
+        hours = minutes//60
+        minutes = minutes % 60
+
+    return (int(hours), int(minutes), int(seconds), int(milliseconds))
+
+
 while success:  
     # cv2.putText(frame, 'fps: ' + str(fps), (0, 200), cv2.FONT_HERSHEY_SIMPLEX, 2, (255,0,255), 5)
     # cv2.putText(frame, 'count: ' + str(frameCount), (0, 300), cv2.FONT_HERSHEY_SIMPLEX,2, (255,0,255), 5)
@@ -74,6 +99,7 @@ while success:
     face_encodings = face_recognition.face_encodings(rgb_frame, face_locations)
 
     face_names = []
+    cur_time_i += 1
     for face_encoding in face_encodings:
         # See if the face is a match for the known face(s)
         match = face_recognition.compare_faces(known_faces, face_encoding, tolerance=0.50)
@@ -92,6 +118,18 @@ while success:
         if not name:
             continue
 
+        if pre_time_i == -1:
+            pre_time_i = cur_time_i
+            left_time = get_ms()
+        elif pre_time_i + 1 == cur_time_i:
+            pre_time_i += 1
+            right_time = get_ms()
+        else:
+            time_zones.append((left_time, right_time))
+            # 下一轮时间区间开始
+            pre_time_i = cur_time_i
+            left_time = get_ms()
+
         # Draw a box around the face
         cv2.rectangle(frame, (left, top), (right, bottom), (0, 0, 255), 2)
 
@@ -109,8 +147,18 @@ while success:
     #     videoWriter.write(frame)
     videoWriter.write(frame)
     success, frame = video.read()
+
+
+
     # Write the resulting image to the output video file
     print("Writing frame {} / {}".format(index, frameCount))
     index += 1
+
+print("各片段时间区间集合如下: ")
+for time_zone in time_zones:
+    print("({}:{}:{}.{}->{}:{}:{}.{})".format(time_zone[0][0], time_zone[0][1],
+                                              time_zone[0][2], time_zone[0][3],
+                                              time_zone[1][0], time_zone[1][1],
+                                              time_zone[1][2], time_zone[1][3]))
 
 video.release()
