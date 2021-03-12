@@ -145,6 +145,8 @@ while success:
     #     cv2.waitKey(1000)
     # else:
     #     videoWriter.write(frame)
+    # TODO: 这里直接不写帧，然后直接后面通过time_zone用FFmpeg来写帧，这样就可以保存视频了
+    # TODO: 但是速度问题需要考虑
     videoWriter.write(frame)
     success, frame = video.read()
 
